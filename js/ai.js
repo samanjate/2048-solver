@@ -1,11 +1,37 @@
 function AI(grid) {
   this.grid = grid;
-  this.maxDepth = 4;
+  maxDepth = 4;
+  SCORE_LOST_PENALTY = -200000.0;
+  SCORE_MONOTONICITY_WEIGHT = 47.0;
+  SCORE_SUM_WEIGHT = 11.0;
+  SCORE_MERGES_WEIGHT = 700.0;
+  SCORE_EMPTY_WEIGHT = 270.0;
 }
 
 // performs a search and returns the best move
 AI.prototype.getBest = function() {
-  return getBestMove(this.grid, 100);  
+  bScore = Number.NEGATIVE_INFINITY;
+  bestMove = -1;
+  for(var m = 0; m < 4; m++) {
+    var nGrid = this.grid.clone();
+    if(nGrid.move(m).moved) {
+      var grids = add2And4Tiles(nGrid);
+      for(var i = 0; i < grids.length; i++) {
+        score = getScore(grids[i], 0, Number.NEGATIVE_INFINITY);
+        if(score > bScore) {
+          bScore = score;
+          bestMove = m;
+        }
+      }
+    }
+  }
+  if(bestMove == -1) {
+    //console.log('Random');
+    bestMove = Math.floor(Math.random() * 4);
+  } 
+  best = {move: bestMove, score: bScore}
+  console.log(best);
+  return best;
 }
 
 function moveName(move) {
@@ -18,100 +44,59 @@ function moveName(move) {
 }
 
 function getScore(grid, depth, maxScore) {
-  if(depth > this.maxDepth) return evaluateGrid(grid);
+  if(!grid.movesAvailable()) {
+    //console.log('Penalty');
+    return this.SCORE_LOST_PENALTY;
+  }
+  if(depth > this.maxDepth) {
+    //console.log('MaxDepth');
+    return evaluateGrid(grid);
+  }
   successors = getSuccessors(grid);
-  for(var i = 0; successors.length; i++) {
-    maxScore = Math.max(maxScore, getScore(successors[i], depth+1, score));
+  for(var i = 0; i < successors.length; i++) {
+    maxScore = Math.max(maxScore, getScore(successors[i], depth+1, maxScore));
+    //console.log(maxScore);
   }
   return maxScore;
 }
 
 function evaluateGrid(grid) {
-  return 0;
+  var openSquares = 0;
+  var monotonicity = grid.monotonicity();
+  for(var i = 0; i < 4; i++) {
+    for(var j = 0; j < 4; j++) {
+      if(grid.cells[i][j] == null) {
+        openSquares++;
+      }
+    }
+  }
+  var eval = openSquares * SCORE_EMPTY_WEIGHT + monotonicity * SCORE_MONOTONICITY_WEIGHT;
+  return eval;
 }
 
 function getSuccessors(grid) {
-  return [];
+  return addSuccessors(grid, 0).concat(addSuccessors(grid, 1)).concat(addSuccessors(grid, 2)).concat(addSuccessors(grid, 3));
 }
 
-function getBestMove(grid, runs, debug) {
-    var bestScore = 0; 
-    var bestMove = -1;
+function addSuccessors(grid, direction) {
+  var newGrid = grid.clone();
+  newGrid.move(direction);
+  return add2And4Tiles(newGrid);
+}
 
-    for (var i=0;i<4;i++) {
-      // score move position
-      var res = multiRandomRun(grid, i, runs);
-      var score = res.score;
-      
-      if (score >= bestScore) {
-        bestScore = score;
-        bestMove = i;
-        bestAvgMoves = res.avg_moves;
+function add2And4Tiles(grid) {
+  var successors = [];
+  for(var i = 0; i < 4; i++) {
+    for(var j = 0; j < 4; j++) {
+      if(grid.cells[i][j] == null) {
+        var newGrid2 = grid.clone();
+        var newGrid4 = grid.clone();
+        newGrid2.cells[i][j] = new Tile({x: i, y: j},2);
+        newGrid4.cells[i][j] = new Tile({x: i, y: j},4);
+        if(newGrid2 == null || newGrid4 == null) console.log('Null');
+        successors.push(newGrid2, newGrid4);
       }
     }
-    if(!grid.movesAvailable()) console.log('bug2');   
-    // assert move found    
-    if (bestMove == -1) {
-      console.log('ERROR...'); 
-      errorGrid = grid.clone();
-    }  
-    
-    return {move: bestMove, score: bestScore};
-}
-
-function multiRandomRun(grid, move, runs) {
-  var total = 0.0;
-  var min = 1000000;
-  var max = 0;
-  var total_moves = 0;
-  
-  for (var i=0 ; i < runs ; i++) {
-    var res = randomRun(grid, move);
-    var s = res.score;
-    if (s == -1) return -1;
-      
-    total += s;
-    total_moves += res.moves;
-    if (s < min) min = s;
-    if (s > max) max = s;
   }
-  
-  var avg = total / runs;
-  var avg_moves = total_moves / runs;
-
-//  return max;
-//  return min;
-//  return avg+max;
-  return {score: avg, avg_moves:avg_moves};
-}
-
-function randomRun(grid, move) {  
-  var g = grid.clone();
-  var score = 0;
-  var res = moveAndAddRandomTiles(g, move);
-  if (!res.moved) {
-    return -1; // can't start
-  } 
-  score += res.score;
-
-  // run til we can't
-  var moves=1;
-  while (true) {
-    if (!g.movesAvailable()) break;
-    
-    var res = g.move(Math.floor(Math.random() * 4));
-    if (!res.moved) continue;
-    
-    score += res.score;
-    g.addRandomTile();
-    moves++;
-  }
-  // grid done.
-  return {score:score, moves:moves};
-}
-
-function moveAndAddRandomTiles(grid, direction) {
-  var res = grid.move(direction);
-  if (res.moved) grid.addRandomTile();
-  return res;
+  return successors;
 }
