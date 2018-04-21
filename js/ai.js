@@ -1,5 +1,6 @@
 function AI(grid) {
   this.grid = grid;
+  this.maxDepth = 4;
 }
 
 // performs a search and returns the best move
@@ -16,8 +17,22 @@ function moveName(move) {
   }[move];
 }
 
-var global_max_score;
-var global_max_score_moves;
+function getScore(grid, depth, maxScore) {
+  if(depth > this.maxDepth) return evaluateGrid(grid);
+  successors = getSuccessors(grid);
+  for(var i = 0; successors.length; i++) {
+    maxScore = Math.max(maxScore, getScore(successors[i], depth+1, score));
+  }
+  return maxScore;
+}
+
+function evaluateGrid(grid) {
+  return 0;
+}
+
+function getSuccessors(grid) {
+  return [];
+}
 
 function getBestMove(grid, runs, debug) {
     var bestScore = 0; 
