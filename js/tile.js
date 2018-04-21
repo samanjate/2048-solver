@@ -18,7 +18,5 @@ Tile.prototype.updatePosition = function (position) {
 
 Tile.prototype.clone = function() {
   newTile = new Tile({ x: this.x, y: this.y }, this.value);
-  //newTile.previousPosition = { x: this.previousPosition.x, y: this.previousPosition.y };
-  //newTile.mergedFrom = { x: this.previousPosition.x, y: this.previousPosition.y };
   return newTile;
 }

@@ -74,8 +74,6 @@ GameManager.prototype.move = function(direction) {
     this.won = true;
   }
 
-  //console.log(this.grid.valueSum());
-
   if (!this.grid.movesAvailable()) {
     this.over = true; // Game over!
   }
