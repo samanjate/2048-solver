@@ -15,3 +15,7 @@ function moveName(move) {
 AI.prototype.getBest = function() {
   return {move: Math.floor(Math.random() * 4), score: 0};
 }
+
+AI.prototype.bestMove = function() {
+  
+}
