@@ -1,11 +1,12 @@
 function AI(grid) {
   this.grid = grid;
-  maxDepth = 4;
-  SCORE_LOST_PENALTY = -200000.0;
-  SCORE_MONOTONICITY_WEIGHT = 47.0;
-  SCORE_SUM_WEIGHT = 11.0;
-  SCORE_MERGES_WEIGHT = 700.0;
-  SCORE_EMPTY_WEIGHT = 270.0;
+  maxDepth = 6;
+  losePenalty = -1000.0;
+  monoWeight = 5.0;
+  smoothWeight = 0.1;
+  emptyWeight = 1.0;
+  maxWeight    = 1.5;
+  cornerWeight = 15.0;
 }
 
 // performs a search and returns the best move
@@ -26,10 +27,9 @@ AI.prototype.getBest = function() {
     }
   }
   if(bestMove == -1) {
-    //console.log('Random');
     bestMove = Math.floor(Math.random() * 4);
   } 
-  best = {move: bestMove, score: bScore}
+  best = {move: bestMove, score: bScore};
   console.log(best);
   return best;
 }
@@ -44,34 +44,34 @@ function moveName(move) {
 }
 
 function getScore(grid, depth, maxScore) {
-  if(!grid.movesAvailable()) {
-    //console.log('Penalty');
-    return this.SCORE_LOST_PENALTY;
-  }
+  var gridScore =  evaluateGrid(grid);
   if(depth > this.maxDepth) {
-    //console.log('MaxDepth');
-    return evaluateGrid(grid);
+    return gridScore;
   }
   successors = getSuccessors(grid);
   for(var i = 0; i < successors.length; i++) {
     maxScore = Math.max(maxScore, getScore(successors[i], depth+1, maxScore));
-    //console.log(maxScore);
   }
-  return maxScore;
+  return maxScore + gridScore;
 }
 
 function evaluateGrid(grid) {
-  var openSquares = 0;
-  var monotonicity = grid.monotonicity();
-  for(var i = 0; i < 4; i++) {
-    for(var j = 0; j < 4; j++) {
-      if(grid.cells[i][j] == null) {
-        openSquares++;
-      }
-    }
+  var openSquares = grid.availableCells().length;
+  var eval = openSquares * this.emptyWeight 
+            + grid.monotonicity() * this.monoWeight 
+            //+ grid.smoothness() * this.smoothWeight
+            + maxTilesAtCorners(grid) * this.cornerWeight; 
+            + grid.maxValue() * this.maxWeight;;
+  if(!grid.movesAvailable()) {
+    eval + this.losePenalty;
   }
-  var eval = openSquares * SCORE_EMPTY_WEIGHT + monotonicity * SCORE_MONOTONICITY_WEIGHT;
   return eval;
+}
+
+function maxTilesAtCorners(grid) {
+  var maxVal = Math.pow(2, grid.maxValue());
+  if(grid.cells[0][0] || grid.cells[3][0] || grid.cells[0][3] || grid.cells[3][3]) return 1.0;
+  else return 0.0;
 }
 
 function getSuccessors(grid) {
@@ -93,7 +93,6 @@ function add2And4Tiles(grid) {
         var newGrid4 = grid.clone();
         newGrid2.cells[i][j] = new Tile({x: i, y: j},2);
         newGrid4.cells[i][j] = new Tile({x: i, y: j},4);
-        if(newGrid2 == null || newGrid4 == null) console.log('Null');
         successors.push(newGrid2, newGrid4);
       }
     }
