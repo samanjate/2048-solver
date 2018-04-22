@@ -272,7 +272,7 @@ Grid.prototype.findFarthestPosition = function (cell, vector) {
 };
 
 Grid.prototype.movesAvailable = function () {
-  return this.cellsAvailable() || this.tileMatchesAvailable();
+  return this.cellsAvailable() || this.tileMatchesAvailable() != 0;
 };
 
 // Check for available matches between tiles (more expensive check)
@@ -280,7 +280,7 @@ Grid.prototype.movesAvailable = function () {
 Grid.prototype.tileMatchesAvailable = function () {
   var self = this;
 
-  //var matches = 0;
+  var matches = 0;
 
   var tile;
 
@@ -296,7 +296,7 @@ Grid.prototype.tileMatchesAvailable = function () {
           var other  = self.cellContent(cell);
 
           if (other && other.value === tile.value) {
-            return true; //matches++; // These two tiles can be merged
+            matches++; // These two tiles can be merged
           }
         }
       }
@@ -304,7 +304,7 @@ Grid.prototype.tileMatchesAvailable = function () {
   }
 
   //console.log(matches);
-  return false; //matches;
+  return matches;
 };
 
 Grid.prototype.positionsEqual = function (first, second) {

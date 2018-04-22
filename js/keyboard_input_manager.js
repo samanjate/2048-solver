@@ -54,8 +54,6 @@ KeyboardInputManager.prototype.listen = function () {
   var retry = document.getElementsByClassName("retry-button")[0];
   retry.addEventListener("click", this.restart.bind(this));
 
-  var hintButton = document.getElementById('hint-button');
-
   var runButton = document.getElementById('run-button');
   runButton.addEventListener('click', function(e) {
     e.preventDefault();
