@@ -26,10 +26,15 @@
 .ai-button, #feedback-container {
   line-height: 40px;
   font-size: 36px;
+  float: right;
+  margin-right: 5px;
 }
 
-#run-button-container {
-  text-align: center;
+.ai-button2, #feedback-container {
+  line-height: 40px;
+  font-size: 36px;
+  float: left;
+  margin-left: 5px;
 }
 
 #feedback-container {

@@ -17,11 +17,22 @@ function GameManager(size, InputManager, Actuator) {
   this.inputManager.on('run', function() {
     if (this.running) {
       this.running = false;
-      this.actuator.setRunButton('Auto-run');
+      this.actuator.setRunButton('Expectimax');
     } else {
       this.running = true;
-      this.run()
+      this.run(0)
       this.actuator.setRunButton('Stop');
+    }
+  }.bind(this));
+
+  this.inputManager.on('run2', function() {
+    if (this.running) {
+      this.running = false;
+      this.actuator.setRunButton2('Minimax');
+    } else {
+      this.running = true;
+      this.run(1)
+      this.actuator.setRunButton2('Stop');
     }
   }.bind(this));
 
@@ -32,7 +43,8 @@ function GameManager(size, InputManager, Actuator) {
 GameManager.prototype.restart = function () {
   this.actuator.restart();
   this.running = false;
-  this.actuator.setRunButton('Auto-run');
+  this.actuator.setRunButton('Expectimax');
+  this.actuator.setRunButton2('Minimax');
   this.setup();
 };
 
@@ -82,8 +94,8 @@ GameManager.prototype.move = function(direction) {
 }
 
 // moves continuously until game is over
-GameManager.prototype.run = function() {
-  var best = this.ai.getBest();
+GameManager.prototype.run = function(algo) {
+  var best = this.ai.getBest(algo);
   this.move(best.move);
   var timeout = animationDelay;
   if (this.running && !this.over && !this.won) {

@@ -145,3 +145,7 @@ HTMLActuator.prototype.showHint = function(hint) {
 HTMLActuator.prototype.setRunButton = function(message) {
   document.getElementById('run-button').innerHTML = message;
 }
+
+HTMLActuator.prototype.setRunButton2 = function(message) {
+  document.getElementById('run-button2').innerHTML = message;
+}

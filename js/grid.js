@@ -5,6 +5,10 @@ function Grid(size) {
   this.cells = [];
 
   this.build();
+  this.weight = [[-2,-1, 0, 3],
+                 [-1, 0, 1, 4],
+                 [ 0, 1, 3, 5],
+                 [ 3, 4, 5, 6]];
   this.playerTurn = true;
 }
 
@@ -326,93 +330,6 @@ Grid.prototype.toString = function() {
   return string;
 }
 
-
-// measures how smooth the grid is (as if the values of the pieces
-// were interpreted as elevations). Sums of the pairwise difference
-// between neighboring tiles (in log space, so it represents the
-// number of merges that need to happen before they can merge). 
-// Note that the pieces can be distant
-Grid.prototype.smoothness = function() {
-  var smoothness = 0;
-  for (var x=0; x<4; x++) {
-    for (var y=0; y<4; y++) {
-      if ( this.cellOccupied( this.indexes[x][y] )) {
-        var value = Math.log(this.cellContent( this.indexes[x][y] ).value) / Math.log(2);
-        for (var direction=1; direction<=2; direction++) {
-          var vector = this.getVector(direction);
-          var targetCell = this.findFarthestPosition(this.indexes[x][y], vector).next;
-
-          if (this.cellOccupied(targetCell)) {
-            var target = this.cellContent(targetCell);
-            var targetValue = Math.log(target.value) / Math.log(2);
-            smoothness -= Math.abs(value - targetValue);
-          }
-        }
-      }
-    }
-  }
-  return smoothness;
-}
-
-// measures how monotonic the grid is. This means the values of the tiles are strictly increasing
-// or decreasing in both the left/right and up/down directions
-Grid.prototype.monotonicity = function() {
-  // scores for all four directions
-  var totals = [0, 0, 0, 0];
-
-  // up/down direction
-  for (var x=0; x<4; x++) {
-    var current = 0;
-    var next = current+1;
-    while ( next<4 ) {
-      while ( next<4 && !this.cellOccupied( this.indexes[x][next] )) {
-        next++;
-      }
-      if (next>=4) { next--; }
-      var currentValue = this.cellOccupied({x:x, y:current}) ?
-        Math.log(this.cellContent( this.indexes[x][current] ).value) / Math.log(2) :
-        0;
-      var nextValue = this.cellOccupied({x:x, y:next}) ?
-        Math.log(this.cellContent( this.indexes[x][next] ).value) / Math.log(2) :
-        0;
-      if (currentValue > nextValue) {
-        totals[0] += nextValue - currentValue;
-      } else if (nextValue > currentValue) {
-        totals[1] += currentValue - nextValue;
-      }
-      current = next;
-      next++;
-    }
-  }
-
-  // left/right direction
-  for (var y=0; y<4; y++) {
-    var current = 0;
-    var next = current+1;
-    while ( next<4 ) {
-      while ( next<4 && !this.cellOccupied( this.indexes[next][y] )) {
-        next++;
-      }
-      if (next>=4) { next--; }
-      var currentValue = this.cellOccupied({x:current, y:y}) ?
-        Math.log(this.cellContent( this.indexes[current][y] ).value) / Math.log(2) :
-        0;
-      var nextValue = this.cellOccupied({x:next, y:y}) ?
-        Math.log(this.cellContent( this.indexes[next][y] ).value) / Math.log(2) :
-        0;
-      if (currentValue > nextValue) {
-        totals[2] += nextValue - currentValue;
-      } else if (nextValue > currentValue) {
-        totals[3] += currentValue - nextValue;
-      }
-      current = next;
-      next++;
-    }
-  }
-
-  return Math.max(totals[0], totals[1]) + Math.max(totals[2], totals[3]);
-}
-
 Grid.prototype.maxValue = function() {
   var max = 0;
   for (var x=0; x<4; x++) {
@@ -427,4 +344,26 @@ Grid.prototype.maxValue = function() {
   }
 
   return Math.log(max) / Math.log(2);
+}
+
+Grid.prototype.getScore = function() {
+  var self = this;
+  var score = 0;
+  var penalty = 0;
+  var directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+  this.eachCell(function(x, y, tile) {
+    if (tile) {
+      score += Math.pow(tile.value, 2) * self.weight[x][y];
+      for (var i = 0; i < 4; i ++) {
+        var pos = {"x" : x + directions[i][0], "y" : y + directions[i][1]};
+        if (self.withinBounds(pos)) {
+          var neighbour = self.cells[pos["x"]][pos["y"]];
+          if (neighbour) {
+            penalty += (Math.abs(neighbour.value - tile.value) * 1);
+          }
+        }
+      }
+    }
+  });
+  return score - penalty;
 }
