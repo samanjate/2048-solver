@@ -6,9 +6,10 @@ function Grid(size) {
 
   this.build();
   this.weight = [[-2,-1, 0, 3],
-                 [-1, 0, 1, 4],
-                 [ 0, 1, 3, 5],
+                 [-1, 0, 2, 4],
+                 [ 0, 2, 4, 5],
                  [ 3, 4, 5, 6]];
+  this.emptySpaceWeight = 32.0;
   this.playerTurn = true;
 }
 
@@ -365,5 +366,5 @@ Grid.prototype.getScore = function() {
       }
     }
   });
-  return score - penalty;
+  return score - penalty + this.availableCells().length * this.emptySpaceWeight;
 }

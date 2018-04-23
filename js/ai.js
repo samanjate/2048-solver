@@ -17,11 +17,12 @@ function moveName(move) {
 AI.prototype.getBest = function(algo) {
   bestScore = Number.NEGATIVE_INFINITY;
   bestMove = -1;
+  var depth = this.maxDepth-1;
   for(var move = 0; move < 4; move++) {
     var newGrid = this.grid.clone();
     if(newGrid.move(move).moved) {
-        var score = algo === 0 ? this.expectimax(newGrid, this.maxDepth-1, false) 
-                               : this.minimax(newGrid, this.maxDepth-1, false);
+        var score = algo === 0 ? this.expectimax(newGrid, depth, false) 
+                               : this.minimax(newGrid, depth, false);
         if(score > bestScore) {
           bestScore = score;
           bestMove = move;
@@ -32,7 +33,7 @@ AI.prototype.getBest = function(algo) {
     bestMove = Math.floor(Math.random() * 4);
   } 
   best = {move: bestMove, score: bestScore};
-  console.log(best);
+  //console.log(best);
   return best;
 }
 
